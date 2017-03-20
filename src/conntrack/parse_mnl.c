@@ -44,7 +44,7 @@ nfct_parse_ip_attr_cb(const struct nlattr *attr, void *data)
 
 static int
 nfct_parse_ip(const struct nlattr *attr, struct __nfct_tuple *tuple,
-	     const int dir, u_int32_t *set)
+	     const int dir, uint32_t *set)
 {
 	struct nlattr *tb[CTA_IP_MAX+1] = {};
 
@@ -147,7 +147,7 @@ nfct_parse_proto_attr_cb(const struct nlattr *attr, void *data)
 
 static int
 nfct_parse_proto(const struct nlattr *attr, struct __nfct_tuple *tuple,
-		const int dir, u_int32_t *set)
+		const int dir, uint32_t *set)
 {
 	struct nlattr *tb[CTA_PROTO_MAX+1] = {};
 
@@ -254,14 +254,19 @@ static int nfct_parse_tuple_attr_cb(const struct nlattr *attr, void *data)
 		if (mnl_attr_validate(attr, MNL_TYPE_NESTED) < 0)
 			return MNL_CB_ERROR;
 		break;
+	case CTA_TUPLE_ZONE:
+		if (mnl_attr_validate(attr, MNL_TYPE_U16) < 0)
+			return MNL_CB_ERROR;
+		break;
 	}
+
 	tb[type] = attr;
 	return MNL_CB_OK;
 }
 
 int
 nfct_parse_tuple(const struct nlattr *attr, struct __nfct_tuple *tuple,
-		int dir, u_int32_t *set)
+		int dir, uint32_t *set)
 {
 	struct nlattr *tb[CTA_TUPLE_MAX+1] = {};
 
@@ -276,6 +281,18 @@ nfct_parse_tuple(const struct nlattr *attr, struct __nfct_tuple *tuple,
 	if (tb[CTA_TUPLE_PROTO]) {
 		if (nfct_parse_proto(tb[CTA_TUPLE_PROTO], tuple, dir, set) < 0)
 			return -1;
+	}
+
+	if (tb[CTA_TUPLE_ZONE]) {
+		tuple->zone = ntohs(mnl_attr_get_u16(tb[CTA_TUPLE_ZONE]));
+		switch(dir) {
+		case __DIR_ORIG:
+			set_bit(ATTR_ORIG_ZONE, set);
+			break;
+		case __DIR_REPL:
+			set_bit(ATTR_REPL_ZONE, set);
+			break;
+		}
 	}
 
 	return 0;
@@ -766,7 +783,7 @@ nfct_parse_timestamp(const struct nlattr *attr, struct nf_conntrack *ct)
 	}
 	if (tb[CTA_TIMESTAMP_STOP]) {
 		ct->timestamp.stop =
-			be64toh(mnl_attr_get_u64(tb[CTA_TIMESTAMP_START]));
+			be64toh(mnl_attr_get_u64(tb[CTA_TIMESTAMP_STOP]));
 		set_bit(ATTR_TIMESTAMP_STOP, ct->head.set);
 	}
 
