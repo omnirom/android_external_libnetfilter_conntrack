@@ -39,6 +39,12 @@ cc_library_shared {
         "-D__HAVE_BUILTIN_BSWAP16__",
         "-D__HAVE_BUILTIN_BSWAP32__",
         "-D__HAVE_BUILTIN_BSWAP64__",
+
+        "-Wno-unused-parameter",
+        "-Wno-sign-compare",
+        "-Wno-pointer-arith",
+        "-Wall",
+        "-Werror",
     ],
     shared_libs: ["libnfnetlink"],
 }
